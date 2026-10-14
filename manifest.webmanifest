@@ -1,0 +1,9 @@
+{
+  "name": "FS20 Editor - Protótipo",
+  "short_name": "FS20 Editor",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "description": "Protótipo de editor 3D e analisador de mods para Farming Simulator 20"
+}

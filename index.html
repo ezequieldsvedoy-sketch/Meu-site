@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<meta name="description" content="Protótipo visual de editor 3D e analisador de mods para Farming Simulator 20.">
+<link rel="manifest" href="manifest.webmanifest">
+<title>FS20 Editor — Protótipo</title>
+<style>
+:root{--bg:#07111f;--panel:#0d1b2d;--panel2:#10243a;--line:#1d4260;--text:#eaf4ff;--muted:#8ea9c2;--green:#24d77b;--blue:#31b9ff;--danger:#ff7070}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#102945,#07111f 55%);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:#07111fee;position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border:2px solid var(--green);border-radius:12px;display:grid;place-items:center;color:var(--green);font-size:23px}.brand strong{font-size:18px;letter-spacing:.3px}.brand small{display:block;color:var(--muted)}
+button,.filebtn{background:#132b43;color:var(--text);border:1px solid #285172;border-radius:9px;padding:10px 12px;font-weight:650;cursor:pointer}button:hover,.filebtn:hover{border-color:var(--blue)}button.primary{background:linear-gradient(135deg,#0caa61,#14d883);border-color:#36f3a1;color:#031b12}button:disabled{opacity:.45;cursor:default}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.layout{display:grid;grid-template-columns:230px minmax(300px,1fr) 290px;gap:10px;padding:10px;max-width:1600px;margin:auto}
+.panel{background:linear-gradient(180deg,#0e2033,#0a1726);border:1px solid var(--line);border-radius:13px;overflow:hidden;min-width:0}.panel h2{font-size:13px;margin:0;padding:12px 13px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.7px;color:#bde5ff}
+.files{padding:12px;color:#c9def1;font-size:13px}.tree{line-height:2}.tree .folder{color:#78d7ff}.tree .file{padding-left:20px;color:#bed0df}.tree .active{color:var(--green)}
+.viewport{position:relative;min-height:440px;height:min(65vh,700px);background:#091727}.viewtop{position:absolute;z-index:2;top:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap}.viewtop span{font-size:12px;background:#07111fd9;border:1px solid #27506e;padding:7px 9px;border-radius:7px;color:#d9efff}.viewtop .live{color:var(--green)}#scene{width:100%;height:100%;display:block}
+.hint{position:absolute;bottom:10px;left:10px;right:10px;padding:9px 11px;border:1px solid #24455d;background:#06101dd9;border-radius:8px;color:#9cb8d1;font-size:12px}
+.tabs{display:flex;border-bottom:1px solid var(--line)}.tabs button{flex:1;border:0;border-radius:0;background:transparent;padding:12px 4px;color:var(--muted)}.tabs button.active{color:var(--green);box-shadow:inset 0 -2px var(--green)}
+.controls{padding:12px;display:grid;gap:13px}.control label{display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;color:#c6d9e9;font-size:12px}.control output{color:var(--green);font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:var(--blue)}input[type=number],select{width:100%;background:#081727;color:var(--text);border:1px solid #294b66;border-radius:7px;padding:9px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.sectiontitle{color:#81cfff;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
+.bottom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 10px 12px;max-width:1600px;margin:auto}.mini{padding:12px}.mini h3{margin:0 0 10px;font-size:14px}.mini p{color:var(--muted);font-size:12px;line-height:1.5}.status{padding:9px;border-radius:8px;background:#081a29;color:#a9c6dc;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:70px}
+#report{max-height:240px;overflow:auto}.foot{padding:12px 16px;color:#7692ab;font-size:12px;text-align:center}
+.mobilebar{display:none}
+@media(max-width:1000px){.layout{grid-template-columns:1fr 280px}.filespanel{display:none}.viewport{min-height:390px;height:55vh}.bottom{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){header{align-items:flex-start;flex-direction:column}.layout{grid-template-columns:1fr;padding:8px}.viewport{height:48vh;min-height:320px}.rightpanel{grid-row:2}.bottom{grid-template-columns:1fr;padding:0 8px 10px}.actions button{padding:9px;font-size:12px}.brand strong{font-size:16px}.mobilebar{display:flex;gap:7px;overflow:auto;padding:0 8px 8px}.mobilebar button{white-space:nowrap}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">⚙</div><div><strong>FS20 <span style="color:var(--green)">EDITOR</span></strong><small>Editor 3D + analisador de mods · Protótipo 0.1</small></div></div>
+  <div class="actions">
+    <label class="filebtn" for="zipInput">⬆ Importar ZIP</label><input id="zipInput" type="file" accept=".zip,application/zip" hidden>
+    <button id="resetBtn">↺ Reiniciar modelo</button><button class="primary" id="exportBtn">⇩ Exportar ZIP</button>
+  </div>
+</header>
+<div class="mobilebar"><button data-view="3d">Vista 3D</button><button data-view="wheel">Editar rodas</button><button data-view="files">Arquivos</button><button data-view="report">Relatório</button></div>
+<main class="layout">
+  <section class="panel filespanel"><h2>Arquivos do projeto</h2><div class="files">
+    <div class="tree" id="fileTree"><div class="folder">▾ 📁 veículo-demo</div><div class="file active">↳ 🚚 caminhão-demo (modelo ilustrativo)</div><div class="folder">▾ 📁 rodas</div><div class="file">↳ ⚙ roda dianteira</div><div class="file">↳ ⚙ roda traseira</div><div class="folder">▸ 📁 texturas</div><div class="folder">▸ 📁 configurações</div></div>
+    <hr style="border-color:var(--line);margin:14px 0"><p style="font-size:12px;color:var(--muted)">Importar ZIP permite listar os arquivos e analisar XML. Este protótipo não carrega diretamente modelos proprietários I3D.</p>
+    <button id="analyzeBtn" style="width:100%">⌕ Analisar pacote</button>
+  </div></section>
+  <section class="panel">
+    <div class="viewport"><div class="viewtop"><span class="live">● 3D INTERATIVO</span><span>Arraste para girar · Pinça/roda para zoom</span><span id="modelLabel">Modelo demonstrativo</span></div><canvas id="scene"></canvas><div class="hint">Demonstração 3D: caminhão simplificado criado para testar a interface. Arraste para girar; use os controles para ajustar rodas.</div></div>
+  </section>
+  <section class="panel rightpanel">
+    <div class="tabs"><button class="active" data-tab="wheels">Rodas</button><button data-tab="transform">Peças</button><button data-tab="project">Projeto</button></div>
+    <div id="wheels" class="controls">
+      <div class="control"><label>Roda selecionada</label><select id="wheelSelect"><option value="front">Roda dianteira esquerda</option><option value="rear">Roda traseira esquerda</option><option value="all">Todas as rodas</option></select></div>
+      <div class="sectiontitle">Dimensões</div>
+      <div class="control"><label>Raio do pneu <output id="radiusVal">0.72</output></label><input id="radius" type="range" min=".35" max="1.25" step=".01" value=".72"></div>
+      <div class="control"><label>Largura do pneu <output id="widthVal">0.42</output></label><input id="tireWidth" type="range" min=".18" max=".8" step=".01" value=".42"></div>
+      <div class="control"><label>Raio do aro <output id="rimVal">0.36</output></label><input id="rim" type="range" min=".15" max=".65" step=".01" value=".36"></div>
+      <div class="sectiontitle">Posição</div>
+      <div class="row2"><div class="control"><label>Eixo X <output id="xVal">0.00</output></label><input id="posX" type="range" min="-3" max="3" step=".05" value="0"></div><div class="control"><label>Altura Y <output id="yVal">0.00</output></label><input id="posY" type="range" min="-1" max="1" step=".05" value="0"></div></div>
+      <div class="control"><label>Deslocamento lateral Z <output id="zVal">0.00</output></label><input id="posZ" type="range" min="-1" max="1" step=".05" value="0"></div>
+      <div class="control"><label>Material do aro</label><select id="rimColor"><option value="#c5d0d9">Prata</option><option value="#242b33">Preto</option><option value="#d9b34c">Dourado</option><option value="#d84a36">Vermelho</option></select></div>
+      <button class="primary" id="applyWheel">Aplicar ajustes</button>
+      <p style="margin:0;color:var(--muted);font-size:11px">Os ajustes alteram o modelo demonstrativo na tela. Exportação do ZIP não injeta ainda estas mudanças em arquivos I3D.</p>
+    </div>
+    <div id="transform" class="controls" hidden>
+      <div class="sectiontitle">Peça demonstrativa</div><select id="partSelect"><option value="cab">Cabine</option><option value="body">Chassi</option><option value="trailer">Carroceria</option></select>
+      <div class="control"><label>Escala <output id="scaleVal">1.00</output></label><input id="partScale" type="range" min=".6" max="1.5" step=".01" value="1"></div>
+      <div class="control"><label>Altura <output id="partYVal">0.00</output></label><input id="partY" type="range" min="-.5" max=".8" step=".01" value="0"></div>
+      <button class="primary" id="applyPart">Aplicar à peça</button>
+      <p style="color:var(--muted);font-size:12px">Controles de escala/altura aplicados a peças simples do modelo demonstrativo.</p>
+    </div>
+    <div id="project" class="controls" hidden>
+      <div class="sectiontitle">Pacote de mod</div><p style="color:var(--muted);margin:0">O protótipo analisa ZIPs locais no navegador e gera relatório. Por segurança, não executa scripts Lua nem altera arquivos originais automaticamente.</p>
+      <button id="analyzeBtn2">Analisar ZIP importado</button><button id="exportBtn2" class="primary">Exportar ZIP demonstrativo</button>
+    </div>
+  </section>
+</main>
+<section class="bottom">
+  <div class="panel mini"><h3>📦 Analisador de mod</h3><p>Selecione um ZIP. O protótipo lista arquivos e verifica a sintaxe dos XMLs quando possível.</p><div id="zipStatus" class="status">Nenhum ZIP importado ainda.</div></div>
+  <div class="panel mini"><h3>🧰 Relatório</h3><div id="report" class="status">Pronto para analisar. Modelos e scripts serão identificados, não convertidos automaticamente.</div></div>
+  <div class="panel mini"><h3>💾 Exportação</h3><p>Cria um ZIP com relatório e um arquivo JSON contendo os parâmetros demonstrativos das rodas.</p><div id="exportStatus" class="status">Aguardando exportação.</div></div>
+</section>
+<div class="foot">FS20 Editor é um protótipo independente e não é afiliado à GIANTS Software. A compatibilidade real depende dos formatos e das regras do jogo.</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
+
+const canvas=document.querySelector('#scene');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+const scene=new THREE.Scene(); scene.background=new THREE.Color('#091727'); scene.fog=new THREE.Fog('#091727',16,38);
+const camera=new THREE.PerspectiveCamera(42,1,.1,100); camera.position.set(7,5.1,8.5);
+scene.add(new THREE.HemisphereLight(0xc9e8ff,0x263244,2));
+const key=new THREE.DirectionalLight(0xffffff,3); key.position.set(5,10,6); key.castShadow=true; scene.add(key);
+const fill=new THREE.DirectionalLight(0x2ca9ff,1.5); fill.position.set(-7,4,-4); scene.add(fill);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:'#172b3d',roughness:.9}));ground.rotation.x=-Math.PI/2;ground.position.y=-.05;ground.receiveShadow=true;scene.add(ground);
+const grid=new THREE.GridHelper(30,30,'#244d68','#17364d');grid.position.y=-.035;scene.add(grid);
+const root=new THREE.Group();scene.add(root);
+const mats={body:new THREE.MeshStandardMaterial({color:'#e7edf2',metalness:.42,roughness:.32}),dark:new THREE.MeshStandardMaterial({color:'#18212b',metalness:.25,roughness:.45}),glass:new THREE.MeshStandardMaterial({color:'#214e67',metalness:.3,roughness:.18}),rubber:new THREE.MeshStandardMaterial({color:'#11161c',roughness:.9}),rim:new THREE.MeshStandardMaterial({color:'#c5d0d9',metalness:.8,roughness:.25}),light:new THREE.MeshStandardMaterial({color:'#bdeeff',emissive:'#70cfff',emissiveIntensity:1.3})};
+const wheels=[];
+function box(name,size,pos,mat,parent=root){const m=new THREE.Mesh(new THREE.BoxGeometry(...size),mat);m.name=name;m.position.set(...pos);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function cylinder(name,r1,r2,h,pos,mat,rot=[0,0,Math.PI/2],parent=root){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,32),mat);m.name=name;m.position.set(...pos);m.rotation.set(...rot);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function wheel(x,y,z,tag,r=.72,w=.42){const g=new THREE.Group();g.name=tag;g.position.set(x,y,z);root.add(g);
+ const tire=new THREE.Mesh(new THREE.CylinderGeometry(r,r,w,36),mats.rubber);tire.rotation.z=Math.PI/2;tire.castShadow=true;tire.name=tag+'_tire';g.add(tire);
+ const rim=new THREE.Mesh(new THREE.CylinderGeometry(r*.51,r*.51,w*1.03,32),mats.rim);rim.rotation.z=Math.PI/2;rim.name=tag+'_rim';g.add(rim);
+ const hub=new THREE.Mesh(new THREE.CylinderGeometry(r*.17,r*.17,w*1.08,24),mats.dark);hub.rotation.z=Math.PI/2;hub.name=tag+'_hub';g.add(hub);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4;const bolt=new THREE.Mesh(new THREE.SphereGeometry(r*.035,8,8),mats.light);bolt.position.set(0,Math.cos(a)*r*.32,Math.sin(a)*r*.32);g.add(bolt)}
+ wheels.push({group:g,tire,rim,hub,tag,base:{x,y,z,r,w}});
+ return g;
+}
+// Stylized heavy truck, created from editable primitive geometry.
+box('chassi',[5.6,.38,1.15],[0,1.08,0],mats.dark);
+box('front_bumper',[.28,.25,1.55],[2.95,.76,0],mats.dark);
+box('front_grille',[.12,.72,.8],[2.88,1.55,0],mats.dark);
+box('grille_trim',[.06,.08,.58],[2.80,1.64,0],mats.rim);
+for(let i=0;i<4;i++)box('grille_line_'+i,[.035,.035,.66],[2.79,1.39+i*.12,0],mats.rim);
+box('cab_lower',[1.55,1.05,1.45],[2.0,1.82,0],mats.body);
+const cab=box('cab',[1.48,1.25,1.38],[1.93,2.7,0],mats.body);
+const windshield=box('windshield',[.045,.75,1.12],[2.69,2.83,0],mats.glass);windshield.rotation.z=-.12;
+box('cab_side_window',[.85,.58,.035],[1.85,2.93,.704],mats.glass);
+box('cab_side_window_R',[.85,.58,.035],[1.85,2.93,-.704],mats.glass);
+box('roof',[1.55,.12,1.47],[1.91,3.35,0],mats.body);
+box('cargo_chassis',[2.1,.25,1.2],[-1.55,1.4,0],mats.dark);
+box('exhaust',[.18,1.0,.18],[.9,2.0,-.85],mats.rim);
+box('fuel_tank',[.75,.36,.55],[.3,.78,-.72],mats.rim);
+for(const x of [2.05,-1.35,-2.25])for(const z of [-.78,.78])wheel(x,.68,z,`${x>0?'front':'rear'}_${z>0?'left':'right'}`,x>0?.62:.75,x>0?.36:.46);
+for(const x of [2.95,2.85])for(const z of [-.52,.52])box('headlight',[.1,.15,.28],[x,.87,z],mats.light);
+const parts={cab,body:root.children.find(o=>o.name==='chassi'),trailer:root.children.find(o=>o.name==='cargo_chassis')};
+let dragging=false,px=0,py=0,rotY=.5,rotX=0,zoom=1;
+canvas.addEventListener('pointerdown',e=>{dragging=true;px=e.clientX;py=e.clientY;canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
+canvas.addEventListener('pointermove',e=>{if(!dragging)return;rotY+=(e.clientX-px)*.008;rotX+=(e.clientY-py)*.005;rotX=Math.max(-.5,Math.min(.8,rotX));px=e.clientX;py=e.clientY});
+canvas.addEventListener('wheel',e=>{zoom*=e.deltaY>0?1.08:.92;zoom=Math.max(.65,Math.min(1.8,zoom));e.preventDefault()},{passive:false});
+let pinchDist=0;
+canvas.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(pinchDist)zoom=Math.max(.65,Math.min(1.8,zoom*(pinchDist/d)));pinchDist=d}},{passive:true});
+canvas.addEventListener('touchend',()=>pinchDist=0);
+function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix()}
+window.addEventListener('resize',resize);resize();
+function animate(){requestAnimationFrame(animate);root.rotation.y=rotY;root.rotation.x=rotX;camera.position.set(7*zoom,5.1*zoom,8.5*zoom);camera.lookAt(0,1.55,0);renderer.render(scene,camera)}animate();
+
+const $=s=>document.querySelector(s); let importedZip=null, importedName='', importedFiles=[];
+const wheelSelect=$('#wheelSelect');
+function selectedWheels(){const val=wheelSelect.value;return wheels.filter(w=>val==='all'||(val==='front'?w.tag.startsWith('front'):w.tag.startsWith('rear')))}
+function updateLabels(){for(const [id,out,fmt] of [['radius','radiusVal',v=>Number(v).toFixed(2)],['tireWidth','widthVal',v=>Number(v).toFixed(2)],['rim','rimVal',v=>Number(v).toFixed(2)],['posX','xVal',v=>Number(v).toFixed(2)],['posY','yVal',v=>Number(v).toFixed(2)],['posZ','zVal',v=>Number(v).toFixed(2)],['partScale','scaleVal',v=>Number(v).toFixed(2)],['partY','partYVal',v=>Number(v).toFixed(2)]])$('#'+out).textContent=fmt($('#'+id).value)}
+function applyWheels(){const r=+$('#radius').value,w=+$('#tireWidth').value,rr=+$('#rim').value;for(const obj of selectedWheels()){const b=obj.base;obj.group.position.set(b.x+(+$('#posX').value),b.y+(+$('#posY').value),b.z+(+$('#posZ').value));obj.tire.geometry.dispose();obj.tire.geometry=new THREE.CylinderGeometry(r,r,w,36);obj.tire.rotation.z=Math.PI/2;obj.rim.geometry.dispose();obj.rim.geometry=new THREE.CylinderGeometry(rr,rr,w*1.03,32);obj.rim.rotation.z=Math.PI/2;obj.hub.geometry.dispose();obj.hub.geometry=new THREE.CylinderGeometry(rr*.34,rr*.34,w*1.08,24);obj.hub.rotation.z=Math.PI/2}mats.rim.color.set($('#rimColor').value);updateLabels()}
+['radius','tireWidth','rim','posX','posY','posZ','partScale','partY'].forEach(id=>$('#'+id).addEventListener('input',()=>{updateLabels();if(['radius','tireWidth','rim','posX','posY','posZ'].includes(id))applyWheels()}));
+$('#applyWheel').addEventListener('click',applyWheels);
+$('#applyPart').addEventListener('click',()=>{const p=parts[$('#partSelect').value];const s=+$('#partScale').value;p.scale.set(s,s,s);p.position.y=({'cab':2.7,'body':1.08,'trailer':1.4}[$('#partSelect').value])+(+$('#partY').value);});
+$('#resetBtn').addEventListener('click',()=>{rotY=.5;rotX=0;zoom=1;$('#radius').value=.72;$('#tireWidth').value=.42;$('#rim').value=.36;$('#posX').value=0;$('#posY').value=0;$('#posZ').value=0;$('#rimColor').value='#c5d0d9';for(const w of wheels){w.group.position.set(w.base.x,w.base.y,w.base.z)}parts.cab.scale.set(1,1,1);parts.cab.position.y=2.7;applyWheels();});
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['wheels','transform','project'].forEach(id=>$('#'+id).hidden=id!==b.dataset.tab)}));
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.view==='wheel')document.querySelector('[data-tab="wheels"]').click();else if(b.dataset.view==='files')document.querySelector('.filespanel').scrollIntoView({behavior:'smooth'});else if(b.dataset.view==='report')$('#report').scrollIntoView({behavior:'smooth'});else canvas.scrollIntoView({behavior:'smooth'})}));
+function fileList(names){const tree=$('#fileTree');tree.innerHTML='<div class="folder">▾ 📦 '+escapeHtml(importedName||'pacote importado')+'</div>'+names.slice(0,250).map(n=>'<div class="file">↳ '+escapeHtml(n)+'</div>').join('')+(names.length>250?'<div class="file">… e mais '+(names.length-250)+' arquivos</div>':'')}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('#zipInput').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{importedZip=await JSZip.loadAsync(f);importedName=f.name;importedFiles=Object.keys(importedZip.files).filter(n=>!importedZip.files[n].dir);fileList(importedFiles);$('#zipStatus').textContent=`Importado: ${f.name}\nArquivos: ${importedFiles.length}\nClique em “Analisar pacote”.`;$ ('#modelLabel').textContent='ZIP carregado';}catch(err){$('#zipStatus').textContent='Não consegui abrir o ZIP: '+err.message;importedZip=null}});
+async function analyze(){if(!importedZip){$('#report').textContent='Importe primeiro um arquivo ZIP.';return}let xml=0,xmlGood=0,xmlBad=[],textures=0,models=0,scripts=0;for(const name of importedFiles){const lower=name.toLowerCase();if(/\.(dds|png|jpe?g|tga|bmp)$/.test(lower))textures++;if(/\.(i3d|obj|fbx|gltf|glb|dae)$/.test(lower)||lower.endsWith('.i3d.shapes'))models++;if(/\.(lua|js|py)$/.test(lower))scripts++;if(lower.endsWith('.xml')){xml++;try{const txt=await importedZip.file(name).async('text');const doc=new DOMParser().parseFromString(txt,'application/xml');if(doc.querySelector('parsererror'))xmlBad.push(name);else xmlGood++}catch{xmlBad.push(name)}}}
+$('#report').textContent=`ANÁLISE: ${importedName}\nArquivos: ${importedFiles.length}\nTexturas: ${textures}\nModelos reconhecidos pela extensão: ${models}\nScripts listados (não executados): ${scripts}\nXMLs lidos sem erro de sintaxe: ${xmlGood}\nXMLs com erro de sintaxe: ${xmlBad.length}${xmlBad.length?'\n- '+xmlBad.slice(0,30).join('\n- '):''}\n\nLimitação: análise estrutural inicial; não confirma compatibilidade com FS20. Modelos I3D e scripts não são convertidos nesta versão.`}
+$('#analyzeBtn').addEventListener('click',analyze);$('#analyzeBtn2').addEventListener('click',analyze);
+async function exportZip(){const zip=new JSZip();if(importedZip){for(const name of importedFiles){const f=importedZip.file(name);if(f)zip.file(name,await f.async('uint8array'))}}else{zip.file('LEIA-ME.txt','Protótipo FS20 Editor. Nenhum mod original foi importado. Este ZIP não é um mod pronto para o jogo.')}
+const params={prototype:'FS20 Editor 0.1',importedName:importedName||null,wheels:wheels.map(w=>({name:w.tag,base:w.base,editedPosition:w.group.position.toArray(),tireRadius:+$('#radius').value,tireWidth:+$('#tireWidth').value,rimRadius:+$('#rim').value,rimColor:$('#rimColor').value})),warning:'Os parâmetros são demonstrativos e ainda não são gravados dentro de modelos I3D nem aplicados aos XMLs do jogo.'};
+zip.file('FS20_EDITOR_PARAMETERS.json',JSON.stringify(params,null,2));
+zip.file('FS20_EDITOR_REPORT.txt',`FS20 Editor - relatório de protótipo\nPacote original: ${importedName||'nenhum'}\nArquivos listados: ${importedFiles.length}\n\nEste projeto ainda não converte modelos 3D nem scripts automaticamente. O ZIP exportado preserva os arquivos originais e adiciona os parâmetros de demonstração e este relatório. Teste sempre uma cópia e não considere o pacote automaticamente compatível com FS20.`);
+const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(importedName?importedName.replace(/\.zip$/i,'')+'_fs20_editor.zip':'fs20_editor_demo.zip');a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000);$('#exportStatus').textContent='ZIP gerado no dispositivo.\nContém os arquivos originais (se importados), um JSON de parâmetros e um relatório. Não é ainda uma conversão completa para o FS20.'}
+$('#exportBtn').addEventListener('click',exportZip);$('#exportBtn2').addEventListener('click',exportZip);
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+updateLabels();
+</script>
+</body></html>
